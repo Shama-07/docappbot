@@ -36,43 +36,22 @@ def message(bot, update):
         d[x]=context[x]
         print(x,d[x])
         if x =='confirm' and d[x] =='yes && slot_in_focus':
+            update.message.reply_text('Let me check for the availability')
             conn = sqlite3.connect('schedule')
             c = conn.cursor()
-            cursor = conn.execute("SELECT * from tbl1")
-            for row in cursor:
-                n=row[0]
-                da=row[1]
-                t=row[2]
-                m=row[3]
-                if t==d['time']:
-                    flag=1
-                else:
-                    flag=0
-            if flag:
-                update.message.reply_text('Cannot book an appointment at this time ,try some other time. to end this say thanks')
-                conn.close()   
-            else:
-                c = conn.cursor()
+            print(c)
+            c.execute("SELECT * from tbl1 where time = ?",(d['time'],))
+            flag = c.fetchall()
+            print(flag)
+            if not flag:
                 c.execute("INSERT INTO tbl1 (name,day,time,mail)"
                                    "VALUES (?,?,?,?)", (d['name'],d['date'],d['time'],d['email']))
                 update.message.reply_text('Appointment Set Successfully')
                 conn.commit()
-                conn.close()         
-            
- #           t = []
-  #          t = c.execute("Select * from tbl1 where time = ?",(d['time'],))
-   #         print(t)
-   #         if t:
-   #             update.message.reply_text('Cannot book an appointment at this time ,try some other time. to end this say thanks')
-   #             conn.close()
-#
- #           else:
-  #              c = conn.cursor()
-  #             c.execute("INSERT INTO tbl1 (name,day,time,mail)"
-  #                                "VALUES (?,?,?,?)", (d['name'],d['date'],d['time'],d['email']))
-   #             update.message.reply_text('Appointment Set Successfully')
-   #             conn.commit()
-    #            conn.close()
+                conn.close() 
+            else:
+               update.message.reply_text('Cannot book an appointment at this time ,try some other time. to end this say thanks')
+               conn.close()       
     # build response
     resp = ''
     for text in response['output']['text']:
