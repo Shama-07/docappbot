@@ -40,12 +40,12 @@ def message(bot, update):
             conn = sqlite3.connect('schedule')
             c = conn.cursor()
             print(c)
-            c.execute("SELECT * from tbl1 where time = ?",(d['time'],))
+            c.execute("SELECT * from tbl1 where time = ? and day = ?",(d['time'],d['date']))
             flag = c.fetchall()
             print(flag)
             if not flag:
                 c.execute("INSERT INTO tbl1 (name,day,time,mail)"
-                                   "VALUES (?,?,?,?)", (d['name'],d['date'],d['time'],d['email']))
+                                   "VALUES (?,?,?,?)", (d['person'],d['date'],d['time'],d['email']))
                 update.message.reply_text('Appointment Set Successfully')
                 conn.commit()
                 conn.close() 
