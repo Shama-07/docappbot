@@ -55,7 +55,16 @@ def message(bot, update):
                 conn.close() 
             else:
                update.message.reply_text('Cannot book an appointment at this time ,try some other time. to end this say thanks')
-               conn.close()       
+               conn.close() 
+        if x =='confirm1' and d[x] =='yes && slot_in_focus':
+            update.message.reply_text('Let me check in the database')  
+            conn = sqlite3.connect('schedule')
+            c = conn.cursor()
+            update.message.reply_text('Cancelling the appointment.....')
+            c.execute("DELETE FROM table1 WHERE day = ? AND time = ? AND doctor = ?",(d['date'],d['time'],d['doctor']))
+            update.message.reply_text('Appointment Cancelled . Thank You')
+            conn.commit()
+            conn.close() 
     # build response
     resp = ''
     for text in response['output']['text']:
