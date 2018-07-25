@@ -29,8 +29,9 @@ def message(bot, update):
         workspace_id='2b6995b3-5f59-4cc7-ad14-bf5a515c9c30',  # TODO
         input={'text': update.message.text},
         context=context)
-    print(json.dumps(response, indent=2))
+    #print(json.dumps(response, indent=2))
     context = response['context']
+    inp = response['input']
     #extract context variables
     for x in context:
         d[x]=context[x]
@@ -40,15 +41,15 @@ def message(bot, update):
             conn = sqlite3.connect('schedule')
             c = conn.cursor()
             print(c)
-            c.execute("SELECT * from tbl1 where time = ? and day = ?",(d['time'],d['date']))
+            c.execute("SELECT * from table1 where day = ? and time = ? and doctor=?",(d['date'],d['time'],d['doctor']))
             print(c)
             flag = c.fetchall()
             print(flag)
             if not flag:
                 print("Submitting ")
                 update.message.reply_text('Submitting your details')
-                c.execute("INSERT INTO tbl1 (name,day,time,mail)"
-                                   "VALUES (?,?,?,?)", (d['person'],d['date'],d['time'],d['email']))
+                c.execute("INSERT INTO table1 (name,day,time,doctor,mail)"
+                                   "VALUES (?,?,?,?,?)",(d['person'],d['date'],d['time'],d['doctor'],d['email']))
                 update.message.reply_text('Appointment Set Successfully')
                 conn.commit()
                 conn.close() 
