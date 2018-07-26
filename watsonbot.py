@@ -2,6 +2,7 @@ from telegram.ext import Updater, MessageHandler, CommandHandler, Filters
 from watson_developer_cloud import ConversationV1
 import json
 import sqlite3
+import smtplib
 
 context = None
 # Define a few command handlers. These usually take the two arguments bot and
@@ -38,47 +39,63 @@ def message(bot, update):
         print(x,d[x])
         if x =='confirm' and d[x] =='yes && slot_in_focus':
             update.message.reply_text('Let me check for the availability')
-            conn = sqlite3.connect('schedule',isolation_level= None)
+            conn = sqlite3.connect('appointment.db',isolation_level= None)
             c = conn.cursor()
             print(c)
-            c.execute("SELECT * from table1 where day = ? and time = ? and doctor=?",(d['date'],d['time'],d['doctor']))
+            c.execute("SELECT * from tbl where day=? and time=? and doctor=?",(d['date'],d['time'],d['doctor']))
             print(c)
             flag = c.fetchall()
+            conn.close();
             print(flag)
             if not flag:
                 print("Submitting ")
                 update.message.reply_text('Submitting your details')
                 try:
-                    c.execute("INSERT INTO table1 (name,day,time,doctor,mail)"
+                    conn = sqlite3.connect('appointment.db',isolation_level= None)
+                    c = conn.cursor()
+                    print(c);
+                    c.execute("INSERT INTO tbl (name,day,time,doctor,mail)"
                                        "VALUES (?,?,?,?,?)",(d['person'],d['date'],d['time'],d['doctor'],d['email']))
                     conn.commit()
                     update.message.reply_text('Appointment Set Successfully. Thank You')
                     conn.close()
+                    msg = 'Thank You for booking an appointment with us.\n ........................................................\nYour Appointment is set with ' + d['doctor'] +'\n DATE ' + d['date']+ '\nTimings ' + d['time'] + '\nWe request you to come half an hour early'
+                    try:
+                        ml = smtplib.SMTP('smtp.gmail.com',587)
+                        ml.ehlo()
+                        ml.starttls()
+                        ml.login('docappbot@gmail.com','abcdef_1')
+                        ml.sendmail('docappbot@gmail.com',d['email'],msg)
+                        ml.close()
+                        update.message.reply_text("Confirmation Mail Has Been Sent")
+                    except:
+                        print("couldn't send")
                 except:
-                    update.message.reply_text('Sorry!! Couldnt set an appointment')
+                    update.message.reply_text('Sorry!! Couldnt set an appointment say thanks and continue ')
 
             else:
                update.message.reply_text('Cannot book an appointment at this time ,try some other time. to end this say thanks')
                conn.close() 
         if x =='confirm1' and d[x] =='yes && slot_in_focus':
             update.message.reply_text('Let me check in the database')  
-            conn = sqlite3.connect('schedule',isolation_level=None)
-            c = conn.cursor()
-            print(c)
             update.message.reply_text('Cancelling the appointment.....')
             try:
-                c.execute("DELETE FROM table1 WHERE day = ? and time=? and doctor=?",(d['date'],d['time'],d['doctor']))
+                conn = sqlite3.connect('appointment.db',isolation_level=None)
+                c = conn.cursor()
+                print(c)
+                c.execute("DELETE FROM tbl WHERE day = ? and time=? and doctor=?",(d['date'],d['time'],d['doctor']))
                 conn.commit()
                 print('done')
                 update.message.reply_text('Appointment Cancelled.Thank You')
                 conn.close()
+     
             except:
-                update.message.reply_text("Sorry!! couldn't cancel an appointment") 
+                update.message.reply_text("Sorry!! couldn't cancel an appointment")
     # build response
     resp = ''
     for text in response['output']['text']:
         resp += text
-
+        resp += "\n"
     update.message.reply_text(resp)
     
 def main():
