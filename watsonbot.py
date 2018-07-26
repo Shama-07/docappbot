@@ -38,7 +38,7 @@ def message(bot, update):
         print(x,d[x])
         if x =='confirm' and d[x] =='yes && slot_in_focus':
             update.message.reply_text('Let me check for the availability')
-            conn = sqlite3.connect('schedule')
+            conn = sqlite3.connect('schedule',isolation_level= None)
             c = conn.cursor()
             print(c)
             c.execute("SELECT * from table1 where day = ? and time = ? and doctor=?",(d['date'],d['time'],d['doctor']))
@@ -48,23 +48,32 @@ def message(bot, update):
             if not flag:
                 print("Submitting ")
                 update.message.reply_text('Submitting your details')
-                c.execute("INSERT INTO table1 (name,day,time,doctor,mail)"
-                                   "VALUES (?,?,?,?,?)",(d['person'],d['date'],d['time'],d['doctor'],d['email']))
-                update.message.reply_text('Appointment Set Successfully')
-                conn.commit()
-                conn.close() 
+                try:
+                    c.execute("INSERT INTO table1 (name,day,time,doctor,mail)"
+                                       "VALUES (?,?,?,?,?)",(d['person'],d['date'],d['time'],d['doctor'],d['email']))
+                    conn.commit()
+                    update.message.reply_text('Appointment Set Successfully. Thank You')
+                    conn.close()
+                except:
+                    update.message.reply_text('Sorry!! Couldnt set an appointment')
+
             else:
                update.message.reply_text('Cannot book an appointment at this time ,try some other time. to end this say thanks')
                conn.close() 
         if x =='confirm1' and d[x] =='yes && slot_in_focus':
             update.message.reply_text('Let me check in the database')  
-            conn = sqlite3.connect('schedule')
+            conn = sqlite3.connect('schedule',isolation_level=None)
             c = conn.cursor()
+            print(c)
             update.message.reply_text('Cancelling the appointment.....')
-            c.execute("DELETE FROM table1 WHERE day = ? AND time = ? AND doctor = ?",(d['date'],d['time'],d['doctor']))
-            update.message.reply_text('Appointment Cancelled . Thank You')
-            conn.commit()
-            conn.close() 
+            try:
+                c.execute("DELETE FROM table1 WHERE day = ? and time=? and doctor=?",(d['date'],d['time'],d['doctor']))
+                conn.commit()
+                print('done')
+                update.message.reply_text('Appointment Cancelled.Thank You')
+                conn.close()
+            except:
+                update.message.reply_text("Sorry!! couldn't cancel an appointment") 
     # build response
     resp = ''
     for text in response['output']['text']:
@@ -73,8 +82,6 @@ def message(bot, update):
     update.message.reply_text(resp)
     
 def main():
-    #connection with db
-    conn = sqlite3.connect('schedule')
     # Create the Updater and pass it your bot's token.
     updater = Updater('631450108:AAHis_hEDLSAWpKy7UiZEoUcyKBpJR4O5DE')  # TODO
 
