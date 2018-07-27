@@ -38,13 +38,32 @@ def message(bot, update):
         d[x]=context[x]
         print(x,d[x])
         if x =='confirm' and d[x] =='yes && slot_in_focus':
+            for x in context:
+                d[x]=context[x]
+                print(x,d[x])
             update.message.reply_text('Let me check for the availability')
-            conn = sqlite3.connect('appointment.db',isolation_level= None)
-            c = conn.cursor()
+            try:
+                conn = sqlite3.connect('appointment.db',isolation_level= None)
+                c = conn.cursor()
+                print('conn done')
+            except:
+                print('connection prob')
             print(c)
-            c.execute("SELECT * from tbl where day=? and time=? and doctor=?",(d['date'],d['time'],d['doctor']))
+            try:
+                d1='SELECT * from tbl where day="%s" and time="%s" and doctor="%s"'%(d['date'],d['time'],d['doctor'])
+                print(d1)
+                c.execute('SELECT * from tbl where day="%s" and time="%s" and doctor="%s"'%(d['date'],d['time'],d['doctor']))
+                print('Select done')
+            except:
+                print('Problem in Select')
+            #c.execute("SELECT * from tbl where day=? and time=? and doctor=?",(d1,t1,d2))
             print(c)
-            flag = c.fetchall()
+            try:
+                flag = c.fetchall()
+                c.close()
+                print('Flag worked')
+            except:
+                print('Prob in flag')
             conn.close();
             print(flag)
             if not flag:
@@ -56,7 +75,9 @@ def message(bot, update):
                     print(c);
                     c.execute("INSERT INTO tbl (name,day,time,doctor,mail)"
                                        "VALUES (?,?,?,?,?)",(d['person'],d['date'],d['time'],d['doctor'],d['email']))
+                    print(c)
                     conn.commit()
+                    c.close()
                     update.message.reply_text('Appointment Set Successfully. Thank You')
                     conn.close()
                     msg = 'Thank You for booking an appointment with us.\n ........................................................\nYour Appointment is set with ' + d['doctor'] +'\n DATE ' + d['date']+ '\nTimings ' + d['time'] + '\nWe request you to come half an hour early'
@@ -75,8 +96,11 @@ def message(bot, update):
 
             else:
                update.message.reply_text('Cannot book an appointment at this time ,try some other time. to end this say thanks')
-               conn.close() 
+              # conn.close() 
         if x =='confirm1' and d[x] =='yes && slot_in_focus':
+            for x in context:
+                d[x]=context[x]
+                print(x,d[x])
             update.message.reply_text('Let me check in the database')  
             update.message.reply_text('Cancelling the appointment.....')
             try:
