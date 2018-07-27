@@ -14,7 +14,7 @@ def start(bot, update):
 
 def help(bot, update):
     print('Received /help command')
-    update.message.reply_text('Help!')
+    update.message.reply_text('Type these commands\nAppointment-for a new appointment.\nCancel Appointment-for cancelling the booked appointment.\nlocation-to know the the location of the hospital.\nlist-for the list of doctors.\ntimimgs-to know the timimgs of the hospital.\nthanks-to make a new appointment after another.\ncancel-to cancel the appointment in the middle.')
 
 
 def message(bot, update):
@@ -112,7 +112,17 @@ def message(bot, update):
                 print('done')
                 update.message.reply_text('Appointment Cancelled.Thank You')
                 conn.close()
-     
+                msg = 'Thank You. Your appointment has been cancelled.\n ........................................................\nYour Appointment was set with ' + d['doctor'] +'\n DATE ' + d['date']+ '\nTimings ' + d['time'] + '\n-SSSR Hospital'
+                try:
+                    ml = smtplib.SMTP('smtp.gmail.com',587)
+                    ml.ehlo()
+                    ml.starttls()
+                    ml.login('docappbot@gmail.com','abcdef_1')
+                    ml.sendmail('docappbot@gmail.com',d['email'],msg)
+                    ml.close()
+                    update.message.reply_text("Confirmation Mail Has Been Sent")
+                except:
+                    print("couldn't send")    
             except:
                 update.message.reply_text("Sorry!! couldn't cancel an appointment")
     # build response
