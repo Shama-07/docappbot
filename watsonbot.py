@@ -9,14 +9,22 @@ context = None
 # update. Error handlers also receive the raised TelegramError object in error.
 def start(bot, update):
     print('Received /start command')
-    update.message.reply_text('Hello!!!  I am doc_app_bot, I can help you get the appointment from your Doctor. If you are new to the bot app' 
-                              'please press /help')
+    if context==None:
+        update.message.reply_text('Hello!!!  I am doc_app_bot, I can help you get the appointment from your Doctor. If you are new to the bot' 
+                                  'app please press /help')
+    else:
+        update.message.reply_text('Sorry Server is busy!!!! try after sometime')
 
 def help(bot, update):
     print('Received /help command')
-    update.message.reply_text('Type these commands\nAppointment-for a new appointment.\nCancel Appointment-for cancelling the booked appointment.\nlocation-to know the the location of the hospital.\nlist-for the list of doctors.\ntimimgs-to know the timimgs of the hospital.\nthanks-to make a new appointment after another.\ncancel-to cancel the appointment in the middle.')
+    update.message.reply_text('Type these commands\n\nAppointment - for a new appointment.\n\nCancel Appointment - for cancelling the booked appointment.\n\nlocation - to know the the location of the hospital.\n\nlist - for the list of doctors.\n\ntimimgs - to know the timimgs of the hospital.\n\nthanks - to make a new appointment after another.\n\ncancel - to cancel the appointment in the middle.\n\n /end - to end the conversation with bot')
 
-
+def end(bot,update):
+    print('Received /end command')
+    global context
+    context = None
+    update.message.reply_text('Thank You!!!! To start a new converstion do /start')
+    
 def message(bot, update):
     print('Received an update')
     global context
@@ -38,10 +46,12 @@ def message(bot, update):
         d[x]=context[x]
         print(x,d[x])
         if x =='confirm' and d[x] =='yes && slot_in_focus':
+            #extract context variables
             for x in context:
                 d[x]=context[x]
                 print(x,d[x])
             update.message.reply_text('Let me check for the availability')
+            #establishing connection with db
             try:
                 conn = sqlite3.connect('appointment.db',isolation_level= None)
                 c = conn.cursor()
@@ -49,6 +59,7 @@ def message(bot, update):
             except:
                 print('connection prob')
             print(c)
+            #code
             try:
                 d1='SELECT * from tbl where day="%s" and time="%s" and doctor="%s"'%(d['date'],d['time'],d['doctor'])
                 print(d1)
@@ -56,7 +67,6 @@ def message(bot, update):
                 print('Select done')
             except:
                 print('Problem in Select')
-            #c.execute("SELECT * from tbl where day=? and time=? and doctor=?",(d1,t1,d2))
             print(c)
             try:
                 flag = c.fetchall()
@@ -66,6 +76,7 @@ def message(bot, update):
                 print('Prob in flag')
             conn.close();
             print(flag)
+            #Inserting details into database
             if not flag:
                 print("Submitting ")
                 update.message.reply_text('Submitting your details')
@@ -78,9 +89,10 @@ def message(bot, update):
                     print(c)
                     conn.commit()
                     c.close()
-                    update.message.reply_text('Appointment Set Successfully. Thank You')
+                    update.message.reply_text('Appointment Set Successfully. Thank You!!!! To continue say done')
                     conn.close()
-                    msg = 'Thank You for booking an appointment with us.\n ........................................................\nYour Appointment is set with ' + d['doctor'] +'\n DATE ' + d['date']+ '\nTimings ' + d['time'] + '\nWe request you to come half an hour early'
+                    msg = 'Thank You for booking an appointment with us.\n ........................................................\nYour Appointment is set with ' + d['doctor'] +'\n Date ' + d['date']+ '\nTimings ' + d['time'] + '\nWe request you to come half an hour early'
+                    #Sending confirmation mails
                     try:
                         ml = smtplib.SMTP('smtp.gmail.com',587)
                         ml.ehlo()
@@ -92,11 +104,11 @@ def message(bot, update):
                     except:
                         print("couldn't send")
                 except:
-                    update.message.reply_text('Sorry!! Couldnt set an appointment say thanks and continue ')
+                    update.message.reply_text('Sorry!! Couldnt set an appointment say okay to continue ')
 
             else:
-               update.message.reply_text('Cannot book an appointment at this time ,try some other time. to end this say thanks')
-              # conn.close() 
+               update.message.reply_text('Cannot book an appointment at this time ,try some other time. to end this say done')
+        #canceling the previously booked appointment
         if x =='confirm1' and d[x] =='yes && slot_in_focus':
             for x in context:
                 d[x]=context[x]
@@ -110,9 +122,9 @@ def message(bot, update):
                 c.execute("DELETE FROM tbl WHERE day = ? and time=? and doctor=?",(d['date'],d['time'],d['doctor']))
                 conn.commit()
                 print('done')
-                update.message.reply_text('Appointment Cancelled.Thank You')
+                update.message.reply_text('Appointment Cancelled.Thank You!!!! To continue say done')
                 conn.close()
-                msg = 'Thank You. Your appointment has been cancelled.\n ........................................................\nYour Appointment was set with ' + d['doctor'] +'\n DATE ' + d['date']+ '\nTimings ' + d['time'] + '\n-SSSR Hospital'
+                msg = 'Thank You. Your appointment has been cancelled.\n ........................................................\nYour Appointment was set with ' + d['doctor'] +'\n Date ' + d['date']+ '\nTimings ' + d['time'] + '\n-SSSR Hospital'
                 try:
                     ml = smtplib.SMTP('smtp.gmail.com',587)
                     ml.ehlo()
@@ -124,7 +136,7 @@ def message(bot, update):
                 except:
                     print("couldn't send")    
             except:
-                update.message.reply_text("Sorry!! couldn't cancel an appointment")
+                update.message.reply_text("Sorry!! couldn't cancel an appointment!!! To continue say done")
     # build response
     resp = ''
     for text in response['output']['text']:
@@ -142,7 +154,7 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
-
+    dp.add_handler(CommandHandler("end", end))
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, message))
     # Start the Bot
