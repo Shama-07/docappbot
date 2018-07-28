@@ -38,7 +38,7 @@ def message(bot, update):
         workspace_id='2b6995b3-5f59-4cc7-ad14-bf5a515c9c30',  # TODO
         input={'text': update.message.text},
         context=context)
-    #print(json.dumps(response, indent=2))
+    print(json.dumps(response, indent=2))
     context = response['context']
     inp = response['input']
     #extract context variables
@@ -103,11 +103,13 @@ def message(bot, update):
                     conn.close()
                     #Sending confirmation mails
                     try:
+                        SUBJECT = "Appointment Confirmed!"
+                        message = 'Subject: {}\n\n{}'.format(SUBJECT, msg)
                         ml = smtplib.SMTP('smtp.gmail.com',587)
                         ml.ehlo()
                         ml.starttls()
                         ml.login('docappbot@gmail.com','abcdef_1')
-                        ml.sendmail('docappbot@gmail.com',d['email'],msg)
+                        ml.sendmail('docappbot@gmail.com',d['email'],message)
                         ml.close()
                         update.message.reply_text("Confirmation Mail Has Been Sent")
                     except:
@@ -137,11 +139,13 @@ def message(bot, update):
                 conn.close()
                 msg = 'Thank You. Your appointment has been cancelled.\n ........................................................\nYour Appointment with appointment id "%d"'%(d['book']) + ' has been cancelled.\n Reschedule for later appointments \n-SSSR Hospital'
                 try:
+                    SUBJECT = "Appointment Cancelled!"
+                    message = 'Subject: {}\n\n{}'.format(SUBJECT, msg)
                     ml = smtplib.SMTP('smtp.gmail.com',587)
                     ml.ehlo()
                     ml.starttls()
                     ml.login('docappbot@gmail.com','abcdef_1')
-                    ml.sendmail('docappbot@gmail.com',d['email'],msg)
+                    ml.sendmail('docappbot@gmail.com',d['email'],message)
                     ml.close()
                     update.message.reply_text("Confirmation Mail Has Been Sent")
                 except:
