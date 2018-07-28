@@ -89,9 +89,18 @@ def message(bot, update):
                     print(c)
                     conn.commit()
                     c.close()
-                    update.message.reply_text('Appointment Set Successfully. Thank You!!!! To continue say done')
                     conn.close()
-                    msg = 'Thank You for booking an appointment with us.\n ........................................................\nYour Appointment is set with ' + d['doctor'] +'\n Date ' + d['date']+ '\nTimings ' + d['time'] + '\nWe request you to come half an hour early'
+                    #Extracting appointment id
+                    conn = sqlite3.connect('appointment.db',isolation_level= None)
+                    c = conn.cursor()
+                    c.execute('SELECT book_id from tbl where day="%s" and time="%s" and doctor="%s"'%(d['date'],d['time'],d['doctor']))
+                    update.message.reply_text('Appointment Set Successfully. Thank You!!!! To continue say done')
+                    flag=c.fetchone()
+                    a=flag[0]
+                    print(a)
+                    msg = 'Thank You for booking an appointment with us.\n ........................................................\nYour Appointment is set with ' + d['doctor'] +'\nAppointment no:"%d"'%(a) +'\n Date ' + d['date']+ '\nTimings ' + d['time'] + '\nWe request you to come half an hour early'
+                    c.close()
+                    conn.close()
                     #Sending confirmation mails
                     try:
                         ml = smtplib.SMTP('smtp.gmail.com',587)
@@ -119,12 +128,14 @@ def message(bot, update):
                 conn = sqlite3.connect('appointment.db',isolation_level=None)
                 c = conn.cursor()
                 print(c)
-                c.execute("DELETE FROM tbl WHERE day = ? and time=? and doctor=?",(d['date'],d['time'],d['doctor']))
+                print(d['book'])
+                c.execute("DELETE FROM tbl WHERE book_id = ?",(d['book'],))
+                #c.execute("DELETE FROM tbl WHERE day = ? and time=? and doctor=?",(d['date'],d['time'],d['doctor']))
                 conn.commit()
                 print('done')
                 update.message.reply_text('Appointment Cancelled.Thank You!!!! To continue say done')
                 conn.close()
-                msg = 'Thank You. Your appointment has been cancelled.\n ........................................................\nYour Appointment was set with ' + d['doctor'] +'\n Date ' + d['date']+ '\nTimings ' + d['time'] + '\n-SSSR Hospital'
+                msg = 'Thank You. Your appointment has been cancelled.\n ........................................................\nYour Appointment with appointment id "%d"'%(d['book']) + ' has been cancelled.\n Reschedule for later appointments \n-SSSR Hospital'
                 try:
                     ml = smtplib.SMTP('smtp.gmail.com',587)
                     ml.ehlo()
