@@ -108,8 +108,8 @@ def message(bot, update):
                         ml = smtplib.SMTP('smtp.gmail.com',587)
                         ml.ehlo()
                         ml.starttls()
-                        ml.login('docappbot@gmail.com','abcdef_1')
-                        ml.sendmail('docappbot@gmail.com',d['email'],message)
+                        ml.login('*@gmail.com','*')
+                        ml.sendmail('*@gmail.com',d['email'],message)
                         ml.close()
                         update.message.reply_text("Confirmation Mail Has Been Sent")
                     except:
@@ -144,8 +144,8 @@ def message(bot, update):
                     ml = smtplib.SMTP('smtp.gmail.com',587)
                     ml.ehlo()
                     ml.starttls()
-                    ml.login('docappbot@gmail.com','abcdef_1')
-                    ml.sendmail('docappbot@gmail.com',d['email'],message)
+                    ml.login('*@gmail.com','*')
+                    ml.sendmail('*@gmail.com',d['email'],message)
                     ml.close()
                     update.message.reply_text("Confirmation Mail Has Been Sent")
                 except:
